@@ -1,0 +1,64 @@
+# AI Assistants
+.claude/
+.codex/
+.cursor/
+.aider/
+.codeium/
+.tabnine/
+.copilot/
+.sourcegraph/
+.cody/
+.continue/
+
+# Project docs (added later)
+README.md
+
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+verman
+
+# Test binary
+*.test
+
+# Output of go coverage
+*.out
+coverage.html
+
+# Go workspace
+go.work
+go.work.sum
+
+# IDE and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Debug
+debug
+*.log
+
+# Local config (if any)
+.env
+.env.local
+*.local.json
+
+# Temp files
+tmp/
+temp/
+*.tmp
