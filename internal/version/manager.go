@@ -68,6 +68,9 @@ func (m *Manager) Use(langName, version string, global bool) error {
 		return fmt.Errorf("unknown language: %s", langName)
 	}
 
+	// Check dependencies and warn if missing
+	m.checkAndWarnDependencies(lang)
+
 	versionPath := m.Config.GetVersionPath(langName, version)
 	if _, err := os.Stat(versionPath); os.IsNotExist(err) {
 		return fmt.Errorf("version %s not installed for %s", version, langName)
@@ -88,9 +91,74 @@ func (m *Manager) Use(langName, version string, global bool) error {
 		return err
 	}
 
+	// Create shims for this language
+	if err := m.CreateShims(langName, currentPath, lang.PathDirs()); err != nil {
+		// Non-fatal, just warn
+		fmt.Fprintf(os.Stderr, "Warning: failed to create shims: %v\n", err)
+	}
+
 	// If global, update persistent environment variables
 	if global {
 		return m.SetGlobalEnv(lang, currentPath)
+	}
+
+	// For Java, remind about JAVA_HOME if not set
+	if langName == "java" && runtime.GOOS == "windows" {
+		javaHome := os.Getenv("JAVA_HOME")
+		if javaHome == "" {
+			absPath, _ := filepath.Abs(versionPath)
+			fmt.Printf("\nNote: JAVA_HOME is not set. JVM tools like Maven/Gradle need it.\n")
+			fmt.Printf("  To set globally, run: verman install java %s (and choose Y)\n", version)
+			fmt.Printf("  Or manually: setx JAVA_HOME \"%s\"\n", absPath)
+		}
+	}
+
+	return nil
+}
+
+// CreateShims creates wrapper scripts in ~/.verman/bin for all executables
+func (m *Manager) CreateShims(langName, currentPath string, pathDirs []string) error {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	shimDir := filepath.Join(home, ".verman", "bin")
+
+	// Ensure shim directory exists
+	if err := os.MkdirAll(shimDir, 0755); err != nil {
+		return err
+	}
+
+	// Find all executables in the path dirs
+	for _, relDir := range pathDirs {
+		binDir := currentPath
+		if relDir != "." {
+			binDir = filepath.Join(currentPath, relDir)
+		}
+
+		entries, err := os.ReadDir(binDir)
+		if err != nil {
+			continue
+		}
+
+		for _, entry := range entries {
+			name := entry.Name()
+			// Only create shims for .exe, .cmd, .bat files on Windows
+			ext := strings.ToLower(filepath.Ext(name))
+			if ext != ".exe" && ext != ".cmd" && ext != ".bat" {
+				continue
+			}
+
+			baseName := strings.TrimSuffix(name, ext)
+			shimPath := filepath.Join(shimDir, baseName+".cmd")
+			targetPath := filepath.Join(binDir, name)
+
+			// Create shim script
+			shimContent := fmt.Sprintf("@echo off\r\n\"%s\" %%*\r\n", targetPath)
+			if err := os.WriteFile(shimPath, []byte(shimContent), 0755); err != nil {
+				continue // Skip on error, non-fatal
+			}
+		}
 	}
 
 	return nil
@@ -102,8 +170,13 @@ func removeJunction(path string) {
 	// But first check if it exists
 	if _, err := os.Lstat(path); err == nil {
 		if runtime.GOOS == "windows" {
-			// Use rmdir for junctions to avoid deleting target contents
-			exec.Command("cmd", "/c", "rmdir", path).Run()
+			// Try cmd first, fall back to PowerShell for Nano Server
+			err := exec.Command("cmd", "/c", "rmdir", path).Run()
+			if err != nil {
+				// Fallback: Use PowerShell Remove-Item
+				exec.Command("pwsh", "-NoProfile", "-Command",
+					fmt.Sprintf("Remove-Item -Path '%s' -Force", path)).Run()
+			}
 		} else {
 			os.Remove(path)
 		}
@@ -131,11 +204,24 @@ func createJunction(linkPath, targetPath string) error {
 		absLink = strings.ReplaceAll(absLink, "/", "\\")
 		absTarget = strings.ReplaceAll(absTarget, "/", "\\")
 
-		// Use mklink /J for junction points (no admin required)
+		// Try cmd first (full Windows), fall back to PowerShell (Nano Server)
 		cmd := exec.Command("cmd", "/c", "mklink", "/J", absLink, absTarget)
 		output, err := cmd.CombinedOutput()
+		if err == nil {
+			return nil
+		}
+
+		// Fallback: Use PowerShell New-Item for Nano Server
+		psCmd := fmt.Sprintf("New-Item -ItemType Junction -Path '%s' -Target '%s'", absLink, absTarget)
+		cmd = exec.Command("pwsh", "-NoProfile", "-Command", psCmd)
+		output, err = cmd.CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("failed to create junction: %w (output: %s, link: %s, target: %s)", err, string(output), absLink, absTarget)
+			// Try powershell.exe as last resort
+			cmd = exec.Command("powershell", "-NoProfile", "-Command", psCmd)
+			output, err = cmd.CombinedOutput()
+			if err != nil {
+				return fmt.Errorf("failed to create junction: %w (output: %s)", err, string(output))
+			}
 		}
 		return nil
 	}
@@ -169,8 +255,36 @@ func (m *Manager) SetGlobalEnv(lang languages.Language, currentPath string) erro
 	return nil
 }
 
-// Install downloads and installs a version
+// checkAndWarnDependencies checks if dependencies are installed and warns if not
+func (m *Manager) checkAndWarnDependencies(lang languages.Language) {
+	deps := lang.GetDependencies()
+	if len(deps) == 0 {
+		return
+	}
+
+	var missing []string
+	for _, dep := range deps {
+		installed, err := m.ListInstalled(dep)
+		if err != nil || len(installed) == 0 {
+			missing = append(missing, dep)
+		}
+	}
+
+	if len(missing) > 0 {
+		fmt.Printf("\nWarning: %s requires %s, but %s is not installed.\n",
+			lang.Name(), missing[0], missing[0])
+		fmt.Printf("  Tip: Install %s first with: verman install %s <version>\n\n",
+			missing[0], missing[0])
+	}
+}
+
+// Install downloads and installs a version (uses default distribution)
 func (m *Manager) Install(langName, version string) error {
+	return m.InstallWithDist(langName, version, "")
+}
+
+// InstallWithDist downloads and installs a version with a specific distribution
+func (m *Manager) InstallWithDist(langName, version, dist string) error {
 	lang, ok := languages.Get(langName)
 	if !ok {
 		return fmt.Errorf("unknown language: %s", langName)
@@ -180,17 +294,29 @@ func (m *Manager) Install(langName, version string) error {
 		return fmt.Errorf("invalid version format: %s", version)
 	}
 
-	versionPath := m.Config.GetVersionPath(langName, version)
+	// Check dependencies and warn if missing
+	m.checkAndWarnDependencies(lang)
+
+	// Construct version path (include distribution in the folder name for Java)
+	versionKey := version
+	if dist != "" {
+		versionKey = version + "-" + dist
+	}
+	versionPath := m.Config.GetVersionPath(langName, versionKey)
 	if _, err := os.Stat(versionPath); err == nil {
-		return fmt.Errorf("version %s already installed", version)
+		return fmt.Errorf("version %s already installed", versionKey)
 	}
 
-	url, err := lang.GetDownloadURL(version)
+	url, err := lang.GetDownloadURLWithDist(version, dist)
 	if err != nil {
 		return fmt.Errorf("failed to get download URL: %w", err)
 	}
 
-	fmt.Printf("Downloading %s %s from %s...\n", langName, version, url)
+	displayVer := version
+	if dist != "" {
+		displayVer = version + "-" + dist
+	}
+	fmt.Printf("Downloading %s %s from %s...\n", langName, displayVer, url)
 
 	// Create temp file for download
 	tmpFile, err := os.CreateTemp("", "verman-*.zip")
@@ -233,8 +359,57 @@ func (m *Manager) Install(langName, version string) error {
 		return fmt.Errorf("post-install failed: %w", err)
 	}
 
-	fmt.Printf("Successfully installed %s %s\n", langName, version)
+	fmt.Printf("Successfully installed %s %s\n", langName, displayVer)
+
+	// For Java, offer to set JAVA_HOME globally
+	if langName == "java" && runtime.GOOS == "windows" {
+		m.offerJavaHomeSetup(versionPath)
+	}
+
+	// Remind about missing dependencies after install
+	deps := lang.GetDependencies()
+	for _, dep := range deps {
+		installed, err := m.ListInstalled(dep)
+		if err != nil || len(installed) == 0 {
+			fmt.Printf("\nNote: %s requires %s to be configured. Run: verman install %s <version>\n",
+				langName, strings.ToUpper(dep+"_HOME"), dep)
+		}
+	}
+
 	return nil
+}
+
+// offerJavaHomeSetup prompts user to set JAVA_HOME globally after Java installation
+func (m *Manager) offerJavaHomeSetup(javaPath string) {
+	// Check if JAVA_HOME is already set
+	currentJavaHome := os.Getenv("JAVA_HOME")
+	if currentJavaHome != "" {
+		fmt.Printf("\nJAVA_HOME is currently set to: %s\n", currentJavaHome)
+	}
+
+	fmt.Printf("\nSet JAVA_HOME globally? [Y/n] ")
+	var response string
+	fmt.Scanln(&response)
+	if response == "" || response == "y" || response == "Y" {
+		absPath, err := filepath.Abs(javaPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error getting absolute path: %v\n", err)
+			return
+		}
+
+		if err := setUserEnvVar("JAVA_HOME", absPath); err != nil {
+			fmt.Fprintf(os.Stderr, "Error setting JAVA_HOME: %v\n", err)
+			fmt.Printf("You can manually set it with:\n")
+			fmt.Printf("  PowerShell: [Environment]::SetEnvironmentVariable('JAVA_HOME', '%s', 'User')\n", absPath)
+			fmt.Printf("  Or: setx JAVA_HOME \"%s\"\n", absPath)
+			return
+		}
+
+		fmt.Printf("JAVA_HOME set to: %s\n", absPath)
+		fmt.Printf("\nTo use in the current terminal session, run:\n")
+		fmt.Printf("  $env:JAVA_HOME = \"%s\"\n", absPath)
+		fmt.Printf("\nRestart your terminal for the change to take effect globally.\n")
+	}
 }
 
 // Uninstall removes an installed version

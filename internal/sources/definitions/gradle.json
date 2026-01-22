@@ -1,0 +1,15 @@
+{
+  "name": "gradle",
+  "displayName": "Gradle",
+  "releasesUrl": "https://services.gradle.org/versions/all",
+  "versionField": "version",
+  "downloadUrl": "https://services.gradle.org/distributions/gradle-{version}-bin.zip",
+  "extractPattern": "gradle-{version}",
+  "versionRegex": "^\\d+(\\.\\d+){0,2}$",
+  "versionFiles": [".gradle-version", "gradle/wrapper/gradle-wrapper.properties"],
+  "envVars": {
+    "GRADLE_HOME": "."
+  },
+  "pathDirs": ["bin"],
+  "dependencies": ["java"]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "scala3",
+  "displayName": "Scala 3",
+  "releasesUrl": "https://api.github.com/repos/scala/scala3/releases",
+  "versionField": "tag_name",
+  "downloadUrl": "https://github.com/scala/scala3/releases/download/{version}/scala3-{version}.zip",
+  "extractPattern": "scala3-{version}",
+  "versionRegex": "^3\\.\\d+(\\.\\d+)?$",
+  "versionFiles": [".scala-version"],
+  "envVars": {
+    "SCALA_HOME": "."
+  },
+  "pathDirs": ["bin"],
+  "dependencies": ["java"]
+}

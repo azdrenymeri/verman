@@ -1,0 +1,22 @@
+# Verman Docker Test Environment
+# Usage:
+#   docker-compose build    - Build the test image
+#   docker-compose run test - Run e2e tests
+#   docker-compose run test powershell - Interactive shell
+
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Mount for live code changes (optional, comment out for clean test)
+    # volumes:
+    #   - .:/verman:ro
+
+    # Environment for testing
+    environment:
+      - VERMAN_HOME=C:\Users\ContainerUser\.verman
+
+    # Interactive mode for debugging
+    stdin_open: true
+    tty: true

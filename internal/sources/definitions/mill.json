@@ -1,0 +1,16 @@
+{
+  "name": "mill",
+  "displayName": "Mill Build Tool",
+  "releasesUrl": "https://api.github.com/repos/com-lihaoyi/mill/releases",
+  "versionField": "tag_name",
+  "downloadUrl": "https://github.com/com-lihaoyi/mill/releases/download/{version}/{version}-assembly",
+  "extractPattern": "",
+  "versionRegex": "^\\d+\\.\\d+\\.\\d+$",
+  "versionFiles": [".mill-version"],
+  "envVars": {
+    "MILL_HOME": "."
+  },
+  "pathDirs": ["."],
+  "postInstall": ["rename mill-{version}-assembly mill.bat"],
+  "dependencies": ["java"]
+}

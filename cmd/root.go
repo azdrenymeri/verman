@@ -3,8 +3,11 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/azdren/verman/internal/config"
+	"github.com/azdren/verman/internal/languages"
+	"github.com/azdren/verman/internal/sources"
 	"github.com/spf13/cobra"
 )
 
@@ -13,9 +16,8 @@ var cfg *config.Config
 var rootCmd = &cobra.Command{
 	Use:   "verman",
 	Short: "A universal version manager for development tools",
-	Long: `Verman is a universal version manager for Windows that manages
-multiple programming language runtimes including Java, Scala, Node.js,
-Python, Ruby, Go, Rust, and .NET.
+	Long: `Verman is a universal version manager for Windows focused on the
+JVM ecosystem: Java, Scala, Kotlin, Gradle, Maven, SBT, Mill, plus Node.js and Go.
 
 Examples:
   verman use java 21        # Switch to Java 21
@@ -26,6 +28,21 @@ Examples:
 }
 
 func Execute() {
+	// Initialize sources
+	home, _ := os.UserHomeDir()
+	userSourcesDir := filepath.Join(home, ".verman", "sources")
+	if err := sources.Load(userSourcesDir); err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading sources: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Load languages from sources
+	if err := languages.LoadFromSources(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading languages: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Load config
 	var err error
 	cfg, err = config.Load()
 	if err != nil {

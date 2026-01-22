@@ -244,15 +244,15 @@ func TestMultipleLanguages(t *testing.T) {
 
 	mgr, _ := setupTestManager(t)
 
-	// Create versions for multiple languages
+	// Create versions for multiple supported languages
 	createMockVersion(t, mgr, "java", "21")
 	createMockVersion(t, mgr, "node", "20")
-	createMockVersion(t, mgr, "python", "3.12")
+	createMockVersion(t, mgr, "scala", "2.13.12")
 
 	// Use each
 	mgr.Use("java", "21", false)
 	mgr.Use("node", "20", false)
-	mgr.Use("python", "3.12", false)
+	mgr.Use("scala", "2.13.12", false)
 
 	// Verify each has correct current
 	tests := []struct {
@@ -261,7 +261,7 @@ func TestMultipleLanguages(t *testing.T) {
 	}{
 		{"java", "21"},
 		{"node", "20"},
-		{"python", "3.12"},
+		{"scala", "2.13.12"},
 	}
 
 	for _, tt := range tests {

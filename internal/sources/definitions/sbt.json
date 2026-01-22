@@ -1,0 +1,15 @@
+{
+  "name": "sbt",
+  "displayName": "sbt (Scala Build Tool)",
+  "releasesUrl": "https://api.github.com/repos/sbt/sbt/releases",
+  "versionField": "tag_name",
+  "downloadUrl": "https://github.com/sbt/sbt/releases/download/v{version}/sbt-{version}.zip",
+  "extractPattern": "sbt",
+  "versionRegex": "^\\d+\\.\\d+\\.\\d+$",
+  "versionFiles": [".sbt-version", "project/build.properties"],
+  "envVars": {
+    "SBT_HOME": "."
+  },
+  "pathDirs": ["bin"],
+  "dependencies": ["java"]
+}

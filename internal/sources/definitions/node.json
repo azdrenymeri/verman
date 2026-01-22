@@ -1,0 +1,12 @@
+{
+  "name": "node",
+  "displayName": "Node.js",
+  "releasesUrl": "https://nodejs.org/dist/index.json",
+  "versionField": "version",
+  "downloadUrl": "https://nodejs.org/dist/v{version}/node-v{version}-win-x64.zip",
+  "extractPattern": "node-v{version}-win-x64",
+  "versionRegex": "^v?\\d+(\\.\\d+){0,2}$",
+  "versionFiles": [".nvmrc", ".node-version"],
+  "envVars": {},
+  "pathDirs": ["."]
+}

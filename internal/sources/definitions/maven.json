@@ -1,0 +1,17 @@
+{
+  "name": "maven",
+  "displayName": "Apache Maven",
+  "releasesUrl": "https://api.github.com/repos/apache/maven/releases",
+  "versionField": "tag_name",
+  "versionPrefix": "maven-",
+  "downloadUrl": "https://archive.apache.org/dist/maven/maven-3/{version}/binaries/apache-maven-{version}-bin.zip",
+  "extractPattern": "apache-maven-{version}",
+  "versionRegex": "^\\d+(\\.\\d+){0,2}$",
+  "versionFiles": [".maven-version", ".mvn/wrapper/maven-wrapper.properties"],
+  "envVars": {
+    "MAVEN_HOME": ".",
+    "M2_HOME": "."
+  },
+  "pathDirs": ["bin"],
+  "dependencies": ["java"]
+}

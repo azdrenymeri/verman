@@ -1,0 +1,32 @@
+{
+  "name": "java",
+  "displayName": "Java",
+  "releasesUrl": "https://api.adoptium.net/v3/info/available_releases",
+  "versionField": "available_releases",
+  "downloadUrl": "https://api.adoptium.net/v3/binary/latest/{majorVersion}/ga/windows/x64/jdk/hotspot/normal/eclipse?project=jdk",
+  "extractPattern": "",
+  "versionRegex": "^\\d+(\\.\\d+){0,2}(-[a-zA-Z]+)?$",
+  "versionFiles": [".java-version", ".sdkmanrc"],
+  "envVars": {
+    "JAVA_HOME": "."
+  },
+  "pathDirs": ["bin"],
+  "defaultDistribution": "temurin",
+  "distributions": {
+    "temurin": {
+      "name": "temurin",
+      "displayName": "Eclipse Temurin (Adoptium)",
+      "downloadUrl": "https://api.adoptium.net/v3/binary/latest/{majorVersion}/ga/windows/x64/jdk/hotspot/normal/eclipse?project=jdk"
+    },
+    "corretto": {
+      "name": "corretto",
+      "displayName": "Amazon Corretto",
+      "downloadUrl": "https://corretto.aws/downloads/latest/amazon-corretto-{majorVersion}-x64-windows-jdk.zip"
+    },
+    "zulu": {
+      "name": "zulu",
+      "displayName": "Azul Zulu",
+      "downloadUrl": "https://cdn.azul.com/zulu/bin/zulu{majorVersion}-ca-jdk{majorVersion}-win_x64.zip"
+    }
+  }
+}

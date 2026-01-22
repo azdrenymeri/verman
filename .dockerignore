@@ -1,0 +1,23 @@
+# Build artifacts (keep verman.exe - needed for Docker image)
+# *.exe
+
+# IDE and editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Test artifacts
+*.log
+coverage.out
+
+# Documentation
+*.md
+!README.md
+
+# Local config
+.claude/settings.local.json

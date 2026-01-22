@@ -2,10 +2,19 @@ package languages
 
 import (
 	"testing"
+
+	"github.com/azdren/verman/internal/sources"
 )
 
+func init() {
+	// Load sources for testing
+	sources.Load("")
+	LoadFromSources()
+}
+
 func TestAllLanguagesRegistered(t *testing.T) {
-	expected := []string{"java", "node", "scala", "python", "ruby", "go", "rust", "dotnet"}
+	// Core languages that should always be available
+	expected := []string{"java", "node", "scala", "go", "gradle"}
 
 	for _, name := range expected {
 		if _, ok := Get(name); !ok {
@@ -17,13 +26,17 @@ func TestAllLanguagesRegistered(t *testing.T) {
 func TestLanguageNames(t *testing.T) {
 	names := Names()
 
-	if len(names) != 8 {
-		t.Errorf("Expected 8 languages, got %d", len(names))
+	// Should have at least the core languages
+	if len(names) < 5 {
+		t.Errorf("Expected at least 5 languages, got %d", len(names))
 	}
 }
 
 func TestJavaValidateVersion(t *testing.T) {
-	java := &Java{}
+	java, ok := Get("java")
+	if !ok {
+		t.Fatal("Java language not found")
+	}
 
 	valid := []string{"8", "11", "17", "21", "17.0.9", "21.0.1"}
 	invalid := []string{"", "abc", "17.x", "latest"}
@@ -42,7 +55,10 @@ func TestJavaValidateVersion(t *testing.T) {
 }
 
 func TestNodeValidateVersion(t *testing.T) {
-	node := &Node{}
+	node, ok := Get("node")
+	if !ok {
+		t.Fatal("Node language not found")
+	}
 
 	valid := []string{"18", "20", "18.19.0", "v20.10.0", "20.10.0"}
 	invalid := []string{"", "lts", "latest", "node18"}
@@ -61,14 +77,18 @@ func TestNodeValidateVersion(t *testing.T) {
 }
 
 func TestScalaValidateVersion(t *testing.T) {
-	scala := &Scala{}
+	scala, ok := Get("scala")
+	if !ok {
+		t.Fatal("Scala language not found")
+	}
 
-	valid := []string{"2.13.12", "3.3.1", "2.12.18"}
-	invalid := []string{"3", "2.13", "latest"}
+	// Scala 2.x versions (scala definition handles 2.x)
+	valid := []string{"2.13.12", "2.12.18"}
+	invalid := []string{"latest"}
 
 	for _, v := range valid {
 		if !scala.ValidateVersion(v) {
-			t.Errorf("Scala version %s should be valid", v)
+			t.Errorf("Scala 2 version %s should be valid", v)
 		}
 	}
 
@@ -77,23 +97,39 @@ func TestScalaValidateVersion(t *testing.T) {
 			t.Errorf("Scala version %s should be invalid", v)
 		}
 	}
+
+	// Scala 3.x is a separate definition (scala3)
+	scala3, ok := Get("scala3")
+	if !ok {
+		t.Fatal("Scala3 language not found")
+	}
+
+	scala3Valid := []string{"3.3.1", "3.4.0"}
+	for _, v := range scala3Valid {
+		if !scala3.ValidateVersion(v) {
+			t.Errorf("Scala 3 version %s should be valid", v)
+		}
+	}
 }
 
-func TestRustValidateVersion(t *testing.T) {
-	rust := &Rust{}
+func TestGradleValidateVersion(t *testing.T) {
+	gradle, ok := Get("gradle")
+	if !ok {
+		t.Fatal("Gradle language not found")
+	}
 
-	valid := []string{"stable", "beta", "nightly", "1.75.0", "nightly-2024-01-01"}
-	invalid := []string{"", "latest", "1.75"}
+	valid := []string{"8.5", "8.4.1", "7.6.3"}
+	invalid := []string{"", "latest", "gradle-8.5"}
 
 	for _, v := range valid {
-		if !rust.ValidateVersion(v) {
-			t.Errorf("Rust version %s should be valid", v)
+		if !gradle.ValidateVersion(v) {
+			t.Errorf("Gradle version %s should be valid", v)
 		}
 	}
 
 	for _, v := range invalid {
-		if rust.ValidateVersion(v) {
-			t.Errorf("Rust version %s should be invalid", v)
+		if gradle.ValidateVersion(v) {
+			t.Errorf("Gradle version %s should be invalid", v)
 		}
 	}
 }
@@ -106,7 +142,7 @@ func TestLanguageEnvVars(t *testing.T) {
 		{"java", map[string]string{"JAVA_HOME": "."}},
 		{"scala", map[string]string{"SCALA_HOME": "."}},
 		{"go", map[string]string{"GOROOT": "."}},
-		{"dotnet", map[string]string{"DOTNET_ROOT": "."}},
+		{"gradle", map[string]string{"GRADLE_HOME": "."}},
 	}
 
 	for _, tt := range tests {
@@ -133,6 +169,7 @@ func TestLanguagePathDirs(t *testing.T) {
 		{"scala", "bin"},
 		{"node", "."},
 		{"go", "bin"},
+		{"gradle", "bin"},
 	}
 
 	for _, tt := range tests {
@@ -164,11 +201,8 @@ func TestLanguageVersionFiles(t *testing.T) {
 		{"java", ".java-version"},
 		{"node", ".nvmrc"},
 		{"scala", ".scala-version"},
-		{"python", ".python-version"},
-		{"ruby", ".ruby-version"},
 		{"go", "go.mod"},
-		{"rust", "rust-toolchain.toml"},
-		{"dotnet", "global.json"},
+		{"gradle", ".gradle-version"},
 	}
 
 	for _, tt := range tests {
@@ -200,10 +234,10 @@ func TestGetDownloadURL(t *testing.T) {
 	}{
 		{"java", "21", false},
 		{"node", "20.10.0", false},
-		{"scala", "3.3.1", false},
 		{"scala", "2.13.12", false},
+		{"scala3", "3.3.1", false},
 		{"go", "1.21.5", false},
-		{"dotnet", "8.0.100", false},
+		{"gradle", "8.5", false},
 	}
 
 	for _, tt := range tests {

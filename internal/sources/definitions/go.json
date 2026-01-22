@@ -1,0 +1,14 @@
+{
+  "name": "go",
+  "displayName": "Go",
+  "releasesUrl": "https://go.dev/dl/?mode=json",
+  "versionField": "version",
+  "downloadUrl": "https://go.dev/dl/go{version}.windows-amd64.zip",
+  "extractPattern": "go",
+  "versionRegex": "^\\d+\\.\\d+(\\.\\d+)?$",
+  "versionFiles": [".go-version", "go.mod"],
+  "envVars": {
+    "GOROOT": "."
+  },
+  "pathDirs": ["bin"]
+}

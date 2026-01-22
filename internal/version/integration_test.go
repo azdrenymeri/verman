@@ -122,17 +122,17 @@ func TestIntegration_MultiLanguageProject(t *testing.T) {
 	homeDir := t.TempDir()
 	versionsDir := filepath.Join(homeDir, ".verman", "versions")
 
-	// Create versions directories
-	for _, lang := range []string{"java", "node", "python"} {
+	// Create versions directories for supported languages
+	for _, lang := range []string{"java", "node", "scala"} {
 		os.MkdirAll(filepath.Join(versionsDir, lang), 0755)
 	}
 
 	cfg := &config.Config{
 		RootPath: versionsDir,
 		Languages: map[string]config.LanguageConfig{
-			"java":   {InstallPath: "java"},
-			"node":   {InstallPath: "node"},
-			"python": {InstallPath: "python"},
+			"java":  {InstallPath: "java"},
+			"node":  {InstallPath: "node"},
+			"scala": {InstallPath: "scala"},
 		},
 	}
 
@@ -141,14 +141,14 @@ func TestIntegration_MultiLanguageProject(t *testing.T) {
 	// Install mock versions
 	os.MkdirAll(filepath.Join(versionsDir, "java", "21", "bin"), 0755)
 	os.MkdirAll(filepath.Join(versionsDir, "node", "20"), 0755)
-	os.MkdirAll(filepath.Join(versionsDir, "python", "3.12", "Scripts"), 0755)
+	os.MkdirAll(filepath.Join(versionsDir, "scala", "2.13.12", "bin"), 0755)
 
 	// Create project with multiple version files
 	projectDir := filepath.Join(homeDir, "fullstack-app")
 	os.MkdirAll(projectDir, 0755)
 	os.WriteFile(filepath.Join(projectDir, ".java-version"), []byte("21"), 0644)
 	os.WriteFile(filepath.Join(projectDir, ".nvmrc"), []byte("20"), 0644)
-	os.WriteFile(filepath.Join(projectDir, ".python-version"), []byte("3.12"), 0644)
+	os.WriteFile(filepath.Join(projectDir, ".scala-version"), []byte("2.13.12"), 0644)
 
 	// Detect all versions
 	detected, err := DetectAll(projectDir)

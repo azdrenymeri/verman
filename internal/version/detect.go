@@ -46,10 +46,14 @@ func detectForLanguage(dir string, lang languages.Language) *DetectedVersion {
 		for {
 			filePath := filepath.Join(currentDir, versionFile)
 			if version := readVersionFile(filePath, lang.Name()); version != "" {
-				return &DetectedVersion{
-					Language: lang.Name(),
-					Version:  version,
-					Source:   filePath,
+				// Validate version against language's regex
+				// This ensures scala 2.x goes to "scala" and 3.x goes to "scala3"
+				if lang.ValidateVersion(version) {
+					return &DetectedVersion{
+						Language: lang.Name(),
+						Version:  version,
+						Source:   filePath,
+					}
 				}
 			}
 

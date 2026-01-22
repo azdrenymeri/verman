@@ -91,12 +91,13 @@ Examples:
 
 		// 4. Summary
 		fmt.Println("\n✓ Setup complete!")
+		fmt.Println("\nTo use verman now, refresh your PATH:")
+		fmt.Printf("  $env:PATH = \"%s;\" + $env:PATH\n", vermanBinDir)
+		fmt.Println("\nOr simply restart your terminal.")
 		fmt.Println("\nNext steps:")
-		fmt.Println("  1. Restart your terminal (or open a new one)")
-		fmt.Println("  2. Run 'verman --help' to get started")
-		fmt.Println("\nInstall your first language version:")
-		fmt.Println("  verman install java 21")
-		fmt.Println("  verman install node 20")
+		fmt.Println("  1. Install a language:  verman install java 21")
+		fmt.Println("  2. Set up shell integration for language runtimes:")
+		fmt.Println("     verman init --install")
 	},
 }
 
@@ -149,9 +150,22 @@ func setUserPath(newPath string) error {
 }
 
 func runPowerShell(command string) (string, error) {
-	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", command)
-	out, err := cmd.Output()
-	return string(out), err
+	// Try pwsh (PowerShell Core) first, fall back to powershell (Windows PowerShell)
+	shells := []string{"pwsh", "powershell"}
+	for _, shell := range shells {
+		cmd := exec.Command(shell, "-NoProfile", "-NonInteractive", "-Command", command)
+		out, err := cmd.Output()
+		if err == nil {
+			return string(out), nil
+		}
+		// If shell not found, try next one
+		if execErr, ok := err.(*exec.Error); ok && execErr.Err == exec.ErrNotFound {
+			continue
+		}
+		// Other error (command failed), return it
+		return string(out), err
+	}
+	return "", fmt.Errorf("no PowerShell found (tried pwsh, powershell)")
 }
 
 func copyFile(src, dst string) error {
