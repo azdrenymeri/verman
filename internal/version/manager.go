@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -336,36 +335,37 @@ func (m *Manager) InstallWithDist(langName, version, dist string) error {
 	// Check download type
 	downloadType := lang.GetDownloadType()
 
+	// Get checksum URL if available
+	checksumURL := lang.GetChecksumURL(version, dist)
+	var expectedChecksum string
+	if checksumURL != "" {
+		fmt.Printf("Fetching checksum...\n")
+		if cs, err := FetchChecksum(checksumURL); err == nil {
+			expectedChecksum = cs
+			fmt.Printf("Checksum: %s...\n", expectedChecksum[:min(16, len(expectedChecksum))])
+		}
+	}
+
 	if downloadType == "file" {
 		// Single file download - save directly to version directory
 		fileName := filepath.Base(url)
 		destPath := filepath.Join(versionPath, fileName)
 
-		resp, err := http.Get(url)
+		cfg := DefaultDownloadConfig()
+		cfg.URL = url
+		cfg.DestPath = destPath
+		cfg.Description = displayVer
+		cfg.ExpectedSHA256 = expectedChecksum
+
+		result, err := DownloadWithRetry(cfg)
 		if err != nil {
 			_ = os.RemoveAll(versionPath)
 			return fmt.Errorf("download failed: %w", err)
 		}
-		defer func() { _ = resp.Body.Close() }()
 
-		if resp.StatusCode != http.StatusOK {
-			_ = os.RemoveAll(versionPath)
-			return fmt.Errorf("download failed: HTTP %d", resp.StatusCode)
+		if result.Retries > 0 {
+			fmt.Printf("Download succeeded after %d retries\n", result.Retries)
 		}
-
-		outFile, err := os.Create(destPath)
-		if err != nil {
-			_ = os.RemoveAll(versionPath)
-			return fmt.Errorf("failed to create file: %w", err)
-		}
-
-		// Download with progress
-		if err := DownloadWithProgress(outFile, resp.Body, resp.ContentLength, displayVer); err != nil {
-			_ = outFile.Close()
-			_ = os.RemoveAll(versionPath)
-			return fmt.Errorf("download failed: %w", err)
-		}
-		_ = outFile.Close()
 	} else {
 		// Zip archive download
 		tmpFile, err := os.CreateTemp("", "verman-*.zip")
@@ -373,32 +373,34 @@ func (m *Manager) InstallWithDist(langName, version, dist string) error {
 			_ = os.RemoveAll(versionPath)
 			return err
 		}
-		defer func() { _ = os.Remove(tmpFile.Name()) }()
-		defer func() { _ = tmpFile.Close() }()
+		tmpPath := tmpFile.Name()
+		_ = tmpFile.Close()
+		defer func() { _ = os.Remove(tmpPath) }()
 
-		// Download
-		resp, err := http.Get(url)
+		cfg := DefaultDownloadConfig()
+		cfg.URL = url
+		cfg.DestPath = tmpPath
+		cfg.Description = displayVer
+		cfg.ExpectedSHA256 = expectedChecksum
+
+		result, err := DownloadWithRetry(cfg)
 		if err != nil {
 			_ = os.RemoveAll(versionPath)
 			return fmt.Errorf("download failed: %w", err)
 		}
-		defer func() { _ = resp.Body.Close() }()
 
-		if resp.StatusCode != http.StatusOK {
-			_ = os.RemoveAll(versionPath)
-			return fmt.Errorf("download failed: HTTP %d", resp.StatusCode)
+		if result.Retries > 0 {
+			fmt.Printf("Download succeeded after %d retries\n", result.Retries)
 		}
 
-		// Download with progress
-		if err := DownloadWithProgress(tmpFile, resp.Body, resp.ContentLength, displayVer); err != nil {
-			_ = os.RemoveAll(versionPath)
-			return fmt.Errorf("download failed: %w", err)
+		if expectedChecksum != "" {
+			fmt.Printf("Checksum verified: %s\n", result.SHA256[:16])
 		}
 
 		fmt.Printf("Extracting to %s...\n", versionPath)
 
 		// Extract zip
-		if err := extractZip(tmpFile.Name(), versionPath); err != nil {
+		if err := extractZip(tmpPath, versionPath); err != nil {
 			_ = os.RemoveAll(versionPath)
 			return fmt.Errorf("extraction failed: %w", err)
 		}

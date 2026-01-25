@@ -22,6 +22,7 @@ type Distribution struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"displayName"`
 	DownloadURL string `json:"downloadUrl"`
+	ChecksumURL string `json:"checksumUrl,omitempty"` // URL for SHA256 checksum
 }
 
 // Source represents a language/tool source configuration
@@ -33,6 +34,7 @@ type Source struct {
 	VersionField   string                   `json:"versionField,omitempty"`  // Field name for version in releases
 	VersionPrefix  string                   `json:"versionPrefix,omitempty"` // Prefix to strip from versions (e.g., "maven-")
 	DownloadURL    string                   `json:"downloadUrl"`
+	ChecksumURL    string                   `json:"checksumUrl,omitempty"`    // URL for SHA256 checksum (supports {version} placeholder)
 	DownloadType   string                   `json:"downloadType,omitempty"`   // "zip" (default), "file" for single file downloads
 	ExtractPattern string                   `json:"extractPattern,omitempty"` // Folder name inside archive
 	VersionRegex   string                   `json:"versionRegex"`
@@ -513,6 +515,36 @@ func compareVersions(a, b string) int {
 // GetDependencies returns the list of dependencies for this source
 func (s *Source) GetDependencies() []string {
 	return s.Dependencies
+}
+
+// GetChecksumURL returns the URL to fetch SHA256 checksum for a version
+func (s *Source) GetChecksumURL(version, dist string) string {
+	var url string
+
+	// If distributions are available, check for distribution-specific checksum URL
+	if len(s.Distributions) > 0 {
+		dist = NormalizeDistribution(dist)
+		if dist == "" {
+			dist = s.DefaultDist
+		}
+		if d, ok := s.Distributions[dist]; ok && d.ChecksumURL != "" {
+			url = d.ChecksumURL
+		}
+	}
+
+	// Fall back to source-level checksum URL
+	if url == "" {
+		url = s.ChecksumURL
+	}
+
+	if url == "" {
+		return ""
+	}
+
+	// Replace placeholders
+	url = strings.ReplaceAll(url, "{version}", version)
+	url = strings.ReplaceAll(url, "{majorVersion}", strings.Split(version, ".")[0])
+	return url
 }
 
 // DependencyStatus represents whether a dependency is satisfied

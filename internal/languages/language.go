@@ -69,6 +69,9 @@ type Language interface {
 
 	// GetDependencies returns the list of other tools this depends on
 	GetDependencies() []string
+
+	// GetChecksumURL returns the URL to fetch SHA256 checksum (empty if not available)
+	GetChecksumURL(version, distribution string) string
 }
 
 // SourceLanguage adapts a Source to the Language interface
@@ -203,6 +206,10 @@ func (sl *SourceLanguage) VersionCommand() string {
 
 func (sl *SourceLanguage) GetDependencies() []string {
 	return sl.source.GetDependencies()
+}
+
+func (sl *SourceLanguage) GetChecksumURL(version, distribution string) string {
+	return sl.source.GetChecksumURL(version, distribution)
 }
 
 // Registry holds all supported languages

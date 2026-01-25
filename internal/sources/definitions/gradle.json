@@ -4,6 +4,7 @@
   "releasesUrl": "https://services.gradle.org/versions/all",
   "versionField": "version",
   "downloadUrl": "https://services.gradle.org/distributions/gradle-{version}-bin.zip",
+  "checksumUrl": "https://services.gradle.org/distributions/gradle-{version}-bin.zip.sha256",
   "downloadType": "zip",
   "extractPattern": "gradle-{version}",
   "versionRegex": "^\\d+(\\.\\d+){0,2}$",
