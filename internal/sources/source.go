@@ -33,6 +33,7 @@ type Source struct {
 	VersionField   string                   `json:"versionField,omitempty"`   // Field name for version in releases
 	VersionPrefix  string                   `json:"versionPrefix,omitempty"`  // Prefix to strip from versions (e.g., "maven-")
 	DownloadURL    string                   `json:"downloadUrl"`
+	DownloadType   string                   `json:"downloadType,omitempty"`   // "zip" (default), "file" for single file downloads
 	ExtractPattern string                   `json:"extractPattern,omitempty"` // Folder name inside archive
 	VersionRegex   string                   `json:"versionRegex"`
 	VersionFiles   []string                 `json:"versionFiles"`

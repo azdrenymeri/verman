@@ -4,6 +4,7 @@
   "releasesUrl": "https://api.github.com/repos/JetBrains/kotlin/releases",
   "versionField": "tag_name",
   "downloadUrl": "https://github.com/JetBrains/kotlin/releases/download/v{version}/kotlin-compiler-{version}.zip",
+  "downloadType": "zip",
   "extractPattern": "kotlinc",
   "versionRegex": "^\\d+\\.\\d+\\.\\d+$",
   "versionFiles": [".kotlin-version"],

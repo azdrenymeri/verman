@@ -4,6 +4,7 @@
   "releasesUrl": "https://api.adoptium.net/v3/info/available_releases",
   "versionField": "available_releases",
   "downloadUrl": "https://api.adoptium.net/v3/binary/latest/{majorVersion}/ga/windows/x64/jdk/hotspot/normal/eclipse?project=jdk",
+  "downloadType": "zip",
   "extractPattern": "",
   "versionRegex": "^\\d+(\\.\\d+){0,2}(-[a-zA-Z]+)?$",
   "versionFiles": [".java-version", ".sdkmanrc"],

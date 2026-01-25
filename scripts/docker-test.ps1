@@ -50,7 +50,7 @@ if (-not $NoBuild) {
     Write-Info "verman.exe built successfully"
 
     Write-Step "Building Docker image"
-    Write-Info "First run pulls ~300MB image..."
+    Write-Info "First run pulls ~5GB Server Core image (has setx/registry support)..."
 
     docker build -t $ImageName .
     if ($LASTEXITCODE -ne 0) {

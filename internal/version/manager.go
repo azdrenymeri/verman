@@ -102,14 +102,26 @@ func (m *Manager) Use(langName, version string, global bool) error {
 		return m.SetGlobalEnv(lang, currentPath)
 	}
 
-	// For Java, remind about JAVA_HOME if not set
+	// For Java, set JAVA_HOME in current process and check if globally set
 	if langName == "java" && runtime.GOOS == "windows" {
-		javaHome := os.Getenv("JAVA_HOME")
-		if javaHome == "" {
-			absPath, _ := filepath.Abs(versionPath)
-			fmt.Printf("\nNote: JAVA_HOME is not set. JVM tools like Maven/Gradle need it.\n")
-			fmt.Printf("  To set globally, run: verman install java %s (and choose Y)\n", version)
-			fmt.Printf("  Or manually: setx JAVA_HOME \"%s\"\n", absPath)
+		absPath, _ := filepath.Abs(versionPath)
+
+		// Check if JAVA_HOME was already set in current session (e.g., by install)
+		existingJavaHome := os.Getenv("JAVA_HOME")
+
+		// Always set in current process for immediate use
+		os.Setenv("JAVA_HOME", absPath)
+
+		// Only show the warning if JAVA_HOME wasn't already set in this session
+		// (meaning we didn't just set it globally during install)
+		if existingJavaHome == "" {
+			// Check if globally set (in registry/profile)
+			globalJavaHome, _ := getUserEnvVar("JAVA_HOME")
+			if globalJavaHome == "" {
+				fmt.Printf("\nNote: JAVA_HOME is set for this session but not globally.\n")
+				fmt.Printf("  To set globally, run: setx JAVA_HOME \"%s\"\n", absPath)
+				fmt.Printf("  Then restart your terminal.\n")
+			}
 		}
 	}
 
@@ -318,40 +330,80 @@ func (m *Manager) InstallWithDist(langName, version, dist string) error {
 	}
 	fmt.Printf("Downloading %s %s from %s...\n", langName, displayVer, url)
 
-	// Create temp file for download
-	tmpFile, err := os.CreateTemp("", "verman-*.zip")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
-
-	// Download
-	resp, err := http.Get(url)
-	if err != nil {
-		return fmt.Errorf("download failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("download failed: HTTP %d", resp.StatusCode)
-	}
-
-	if _, err := io.Copy(tmpFile, resp.Body); err != nil {
-		return fmt.Errorf("download failed: %w", err)
-	}
-
-	fmt.Printf("Extracting to %s...\n", versionPath)
-
 	// Create version directory
 	if err := os.MkdirAll(versionPath, 0755); err != nil {
 		return err
 	}
 
-	// Extract zip
-	if err := extractZip(tmpFile.Name(), versionPath); err != nil {
-		os.RemoveAll(versionPath)
-		return fmt.Errorf("extraction failed: %w", err)
+	// Check download type
+	downloadType := lang.GetDownloadType()
+
+	if downloadType == "file" {
+		// Single file download - save directly to version directory
+		fileName := filepath.Base(url)
+		destPath := filepath.Join(versionPath, fileName)
+
+		resp, err := http.Get(url)
+		if err != nil {
+			os.RemoveAll(versionPath)
+			return fmt.Errorf("download failed: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			os.RemoveAll(versionPath)
+			return fmt.Errorf("download failed: HTTP %d", resp.StatusCode)
+		}
+
+		outFile, err := os.Create(destPath)
+		if err != nil {
+			os.RemoveAll(versionPath)
+			return fmt.Errorf("failed to create file: %w", err)
+		}
+
+		if _, err := io.Copy(outFile, resp.Body); err != nil {
+			outFile.Close()
+			os.RemoveAll(versionPath)
+			return fmt.Errorf("download failed: %w", err)
+		}
+		outFile.Close()
+
+		fmt.Printf("Downloaded to %s\n", versionPath)
+	} else {
+		// Zip archive download
+		tmpFile, err := os.CreateTemp("", "verman-*.zip")
+		if err != nil {
+			os.RemoveAll(versionPath)
+			return err
+		}
+		defer os.Remove(tmpFile.Name())
+		defer tmpFile.Close()
+
+		// Download
+		resp, err := http.Get(url)
+		if err != nil {
+			os.RemoveAll(versionPath)
+			return fmt.Errorf("download failed: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			os.RemoveAll(versionPath)
+			return fmt.Errorf("download failed: HTTP %d", resp.StatusCode)
+		}
+
+		if _, err := io.Copy(tmpFile, resp.Body); err != nil {
+			os.RemoveAll(versionPath)
+			return fmt.Errorf("download failed: %w", err)
+		}
+
+		fmt.Printf("Extracting to %s...\n", versionPath)
+
+		// Extract zip
+		if err := extractZip(tmpFile.Name(), versionPath); err != nil {
+			os.RemoveAll(versionPath)
+			return fmt.Errorf("extraction failed: %w", err)
+		}
 	}
 
 	// Run post-install
@@ -405,10 +457,21 @@ func (m *Manager) offerJavaHomeSetup(javaPath string) {
 			return
 		}
 
-		fmt.Printf("JAVA_HOME set to: %s\n", absPath)
-		fmt.Printf("\nTo use in the current terminal session, run:\n")
+		// Verify the write succeeded
+		verifyValue, verifyErr := getUserEnvVar("JAVA_HOME")
+		if verifyErr != nil || verifyValue != absPath {
+			fmt.Printf("JAVA_HOME was set, but verification failed.\n")
+			fmt.Printf("The change may not persist. To ensure it works, run:\n")
+			fmt.Printf("  setx JAVA_HOME \"%s\"\n", absPath)
+		} else {
+			fmt.Printf("JAVA_HOME set to: %s\n", absPath)
+		}
+
+		// Always show how to apply immediately
+		fmt.Printf("\nTo apply in current terminal, run:\n")
 		fmt.Printf("  $env:JAVA_HOME = \"%s\"\n", absPath)
-		fmt.Printf("\nRestart your terminal for the change to take effect globally.\n")
+		fmt.Printf("\nOr refresh all verman environment variables:\n")
+		fmt.Printf("  verman env | Invoke-Expression\n")
 	}
 }
 

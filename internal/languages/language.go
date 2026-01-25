@@ -1,6 +1,12 @@
 package languages
 
 import (
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+
 	"github.com/azdren/verman/internal/sources"
 )
 
@@ -51,6 +57,9 @@ type Language interface {
 
 	// GetExtractPattern returns the expected folder name inside the archive
 	GetExtractPattern(version string) string
+
+	// GetDownloadType returns "zip" (default) or "file" for single file downloads
+	GetDownloadType() string
 
 	// PostInstall runs any post-installation steps
 	PostInstall(versionPath string) error
@@ -115,8 +124,54 @@ func (sl *SourceLanguage) GetExtractPattern(version string) string {
 	return sl.source.GetExtractPattern(version)
 }
 
+func (sl *SourceLanguage) GetDownloadType() string {
+	if sl.source.DownloadType != "" {
+		return sl.source.DownloadType
+	}
+	return "zip" // default
+}
+
 func (sl *SourceLanguage) PostInstall(versionPath string) error {
-	// TODO: Implement post-install commands if needed
+	if len(sl.source.PostInstall) == 0 {
+		return nil
+	}
+
+	for _, cmd := range sl.source.PostInstall {
+		// Replace {version} placeholder if present
+		// For now, just run the command in the version directory
+		if err := runPostInstallCommand(versionPath, cmd); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func runPostInstallCommand(workDir, command string) error {
+	// Parse the command - simple split by space
+	parts := strings.Fields(command)
+	if len(parts) == 0 {
+		return nil
+	}
+
+	// Handle Windows-specific commands
+	var cmd *exec.Cmd
+	switch parts[0] {
+	case "rename", "ren":
+		// Windows rename command: rename oldname newname
+		if len(parts) >= 3 {
+			oldPath := filepath.Join(workDir, parts[1])
+			newPath := filepath.Join(workDir, parts[2])
+			return os.Rename(oldPath, newPath)
+		}
+	default:
+		// Run as shell command
+		cmd = exec.Command("cmd", "/c", command)
+		cmd.Dir = workDir
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("post-install command failed: %s (output: %s)", err, string(output))
+		}
+	}
 	return nil
 }
 

@@ -3,8 +3,9 @@
 # Build: docker build -t verman-test .
 # Run:   docker run --rm -it verman-test
 
-# Small image with PowerShell (~300MB)
-FROM mcr.microsoft.com/powershell:nanoserver-ltsc2022
+# Windows Server Core LTSC2025 - compatible with Windows 11 24H2
+# Has setx, registry access, full Windows CLI tools (~5GB)
+FROM mcr.microsoft.com/windows/servercore:ltsc2025
 
 WORKDIR C:/verman
 
@@ -12,8 +13,8 @@ WORKDIR C:/verman
 COPY verman.exe .
 COPY scripts ./scripts
 
-# Use PowerShell as shell for RUN commands
-SHELL ["pwsh", "-Command"]
+# Use Windows PowerShell for RUN commands
+SHELL ["powershell", "-Command"]
 
 # Verify binary runs
 RUN .\verman.exe --help
@@ -21,8 +22,9 @@ RUN .\verman.exe --help
 # Run setup (copies to ~/.verman/bin)
 RUN .\verman.exe setup
 
-# Add verman bin to PATH (shims will be created here too)
-ENV PATH="C:\Users\ContainerUser\.verman\bin;${PATH}"
+# Add verman bin and working dir to PATH (include essential Windows paths)
+# Server Core runs as ContainerAdministrator by default
+ENV PATH="C:\\verman;C:\\Users\\ContainerAdministrator\\.verman\\bin;C:\\Windows\\System32;C:\\Windows;C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
 
-# Default entrypoint - use full path to pwsh
-ENTRYPOINT ["C:\\Program Files\\PowerShell\\pwsh.exe"]
+# Default entrypoint - Windows PowerShell (full path required for exec form)
+ENTRYPOINT ["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", "-NoExit"]

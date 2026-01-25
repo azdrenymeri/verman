@@ -5,6 +5,7 @@
   "versionField": "tag_name",
   "versionPrefix": "maven-",
   "downloadUrl": "https://archive.apache.org/dist/maven/maven-3/{version}/binaries/apache-maven-{version}-bin.zip",
+  "downloadType": "zip",
   "extractPattern": "apache-maven-{version}",
   "versionRegex": "^\\d+(\\.\\d+){0,2}$",
   "versionFiles": [".maven-version", ".mvn/wrapper/maven-wrapper.properties"],

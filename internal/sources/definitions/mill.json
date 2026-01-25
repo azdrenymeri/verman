@@ -3,7 +3,8 @@
   "displayName": "Mill Build Tool",
   "releasesUrl": "https://api.github.com/repos/com-lihaoyi/mill/releases",
   "versionField": "tag_name",
-  "downloadUrl": "https://github.com/com-lihaoyi/mill/releases/download/{version}/{version}-assembly",
+  "downloadUrl": "https://repo1.maven.org/maven2/com/lihaoyi/mill-dist/{version}/mill-dist-{version}-mill.bat",
+  "downloadType": "file",
   "extractPattern": "",
   "versionRegex": "^\\d+\\.\\d+\\.\\d+$",
   "versionFiles": [".mill-version"],
@@ -11,6 +12,6 @@
     "MILL_HOME": "."
   },
   "pathDirs": ["."],
-  "postInstall": ["rename mill-{version}-assembly mill.bat"],
+  "postInstall": ["rename mill-dist-{version}-mill.bat mill.bat"],
   "dependencies": ["java"]
 }

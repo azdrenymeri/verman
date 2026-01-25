@@ -4,6 +4,7 @@
   "releasesUrl": "https://api.github.com/repos/scala/scala3/releases",
   "versionField": "tag_name",
   "downloadUrl": "https://github.com/scala/scala3/releases/download/{version}/scala3-{version}.zip",
+  "downloadType": "zip",
   "extractPattern": "scala3-{version}",
   "versionRegex": "^3\\.\\d+(\\.\\d+)?$",
   "versionFiles": [".scala-version"],
