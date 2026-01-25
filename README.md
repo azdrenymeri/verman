@@ -1,8 +1,8 @@
 # Verman
 
-A lightweight version manager for Windows, born out of necessity.
+A lightweight version manager for Windows, born out of personal necessity.
 
-I spend most of my time in the JVM ecosystem on Windows, and I got tired of manually juggling Java versions, Scala installations, and build tools. SDKMAN is great, but it doesn't play well with Windows. So I built something that does.
+A tool to manage JVM languages and the build tools that come with them.
 
 ## Supported Tools
 
