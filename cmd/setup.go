@@ -134,7 +134,7 @@ func addToPath(dir string) {
 func getCurrentUserPath() string {
 	// Read from registry via PowerShell
 	// This gets the User PATH, not the combined PATH
-	cmd := fmt.Sprintf(`[Environment]::GetEnvironmentVariable("PATH", "User")`)
+	cmd := `[Environment]::GetEnvironmentVariable("PATH", "User")`
 	out, err := runPowerShell(cmd)
 	if err != nil {
 		return ""
@@ -173,13 +173,13 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer source.Close()
+	defer func() { _ = source.Close() }()
 
 	dest, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer dest.Close()
+	defer func() { _ = dest.Close() }()
 
 	_, err = io.Copy(dest, source)
 	return err

@@ -110,7 +110,7 @@ func (m *Manager) Use(langName, version string, global bool) error {
 		existingJavaHome := os.Getenv("JAVA_HOME")
 
 		// Always set in current process for immediate use
-		os.Setenv("JAVA_HOME", absPath)
+		_ = os.Setenv("JAVA_HOME", absPath)
 
 		// Only show the warning if JAVA_HOME wasn't already set in this session
 		// (meaning we didn't just set it globally during install)
@@ -343,55 +343,55 @@ func (m *Manager) InstallWithDist(langName, version, dist string) error {
 
 		resp, err := http.Get(url)
 		if err != nil {
-			os.RemoveAll(versionPath)
+			_ = os.RemoveAll(versionPath)
 			return fmt.Errorf("download failed: %w", err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusOK {
-			os.RemoveAll(versionPath)
+			_ = os.RemoveAll(versionPath)
 			return fmt.Errorf("download failed: HTTP %d", resp.StatusCode)
 		}
 
 		outFile, err := os.Create(destPath)
 		if err != nil {
-			os.RemoveAll(versionPath)
+			_ = os.RemoveAll(versionPath)
 			return fmt.Errorf("failed to create file: %w", err)
 		}
 
 		// Download with progress
 		if err := DownloadWithProgress(outFile, resp.Body, resp.ContentLength, displayVer); err != nil {
-			outFile.Close()
-			os.RemoveAll(versionPath)
+			_ = outFile.Close()
+			_ = os.RemoveAll(versionPath)
 			return fmt.Errorf("download failed: %w", err)
 		}
-		outFile.Close()
+		_ = outFile.Close()
 	} else {
 		// Zip archive download
 		tmpFile, err := os.CreateTemp("", "verman-*.zip")
 		if err != nil {
-			os.RemoveAll(versionPath)
+			_ = os.RemoveAll(versionPath)
 			return err
 		}
-		defer os.Remove(tmpFile.Name())
-		defer tmpFile.Close()
+		defer func() { _ = os.Remove(tmpFile.Name()) }()
+		defer func() { _ = tmpFile.Close() }()
 
 		// Download
 		resp, err := http.Get(url)
 		if err != nil {
-			os.RemoveAll(versionPath)
+			_ = os.RemoveAll(versionPath)
 			return fmt.Errorf("download failed: %w", err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusOK {
-			os.RemoveAll(versionPath)
+			_ = os.RemoveAll(versionPath)
 			return fmt.Errorf("download failed: HTTP %d", resp.StatusCode)
 		}
 
 		// Download with progress
 		if err := DownloadWithProgress(tmpFile, resp.Body, resp.ContentLength, displayVer); err != nil {
-			os.RemoveAll(versionPath)
+			_ = os.RemoveAll(versionPath)
 			return fmt.Errorf("download failed: %w", err)
 		}
 
@@ -399,7 +399,7 @@ func (m *Manager) InstallWithDist(langName, version, dist string) error {
 
 		// Extract zip
 		if err := extractZip(tmpFile.Name(), versionPath); err != nil {
-			os.RemoveAll(versionPath)
+			_ = os.RemoveAll(versionPath)
 			return fmt.Errorf("extraction failed: %w", err)
 		}
 	}
@@ -494,7 +494,7 @@ func extractZip(zipPath, destPath string) error {
 	if err != nil {
 		return err
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 
 	// Find common prefix (many zips have a single root folder)
 	var prefix string
@@ -524,7 +524,7 @@ func extractZip(zipPath, destPath string) error {
 		fpath := filepath.Join(destPath, name)
 
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(fpath, 0755)
+			_ = os.MkdirAll(fpath, 0755)
 			continue
 		}
 
@@ -539,13 +539,13 @@ func extractZip(zipPath, destPath string) error {
 
 		rc, err := f.Open()
 		if err != nil {
-			outFile.Close()
+			_ = outFile.Close()
 			return err
 		}
 
 		_, err = io.Copy(outFile, rc)
-		outFile.Close()
-		rc.Close()
+		_ = outFile.Close()
+		_ = rc.Close()
 
 		if err != nil {
 			return err

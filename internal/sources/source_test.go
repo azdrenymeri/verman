@@ -5,7 +5,7 @@ import (
 )
 
 func init() {
-	Load("")
+	_ = Load("")
 }
 
 func TestLoadSources(t *testing.T) {
@@ -284,8 +284,8 @@ func TestParseVersionAndDistribution(t *testing.T) {
 		{"21-corretto", "21", "corretto"},
 		{"21-zulu", "21", "zulu"},
 		{"17.0.9-tem", "17.0.9", "tem"},
-		{"21-unknown", "21-unknown", ""},      // Unknown suffix not stripped
-		{"21-beta-tem", "21-beta", "tem"},     // Multi-part version
+		{"21-unknown", "21-unknown", ""},  // Unknown suffix not stripped
+		{"21-beta-tem", "21-beta", "tem"}, // Multi-part version
 	}
 
 	for _, tt := range tests {

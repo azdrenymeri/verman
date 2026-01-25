@@ -177,9 +177,10 @@ func listJavaVersions(src *sources.Source, versions []string, installedMap map[s
 		for _, v := range versions {
 			// Build identifier with short distribution name
 			distShortId := dist.key
-			if dist.key == "temurin" {
+			switch dist.key {
+			case "temurin":
 				distShortId = "tem"
-			} else if dist.key == "corretto" {
+			case "corretto":
 				distShortId = "amzn"
 			}
 			identifier := v + "-" + distShortId // e.g., "21-tem", "21-amzn", "21-zulu"
@@ -215,9 +216,10 @@ func listJavaVersions(src *sources.Source, versions []string, installedMap map[s
 			}
 
 			distShort := dist.key
-			if dist.key == "temurin" {
+			switch dist.key {
+			case "temurin":
 				distShort = "tem"
-			} else if dist.key == "corretto" {
+			case "corretto":
 				distShort = "amzn"
 			}
 
@@ -290,10 +292,10 @@ func compareVersions(a, b string) int {
 	for i := 0; i < maxLen; i++ {
 		var aNum, bNum int
 		if i < len(aParts) {
-			fmt.Sscanf(aParts[i], "%d", &aNum)
+			_, _ = fmt.Sscanf(aParts[i], "%d", &aNum)
 		}
 		if i < len(bParts) {
-			fmt.Sscanf(bParts[i], "%d", &bNum)
+			_, _ = fmt.Sscanf(bParts[i], "%d", &bNum)
 		}
 		if aNum != bNum {
 			return aNum - bNum

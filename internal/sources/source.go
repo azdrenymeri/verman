@@ -29,9 +29,9 @@ type Source struct {
 	Name           string                   `json:"name"`
 	DisplayName    string                   `json:"displayName"`
 	ReleasesURL    string                   `json:"releasesUrl"`
-	ReleasesPath   string                   `json:"releasesPath,omitempty"`   // JSON path to versions array
-	VersionField   string                   `json:"versionField,omitempty"`   // Field name for version in releases
-	VersionPrefix  string                   `json:"versionPrefix,omitempty"`  // Prefix to strip from versions (e.g., "maven-")
+	ReleasesPath   string                   `json:"releasesPath,omitempty"`  // JSON path to versions array
+	VersionField   string                   `json:"versionField,omitempty"`  // Field name for version in releases
+	VersionPrefix  string                   `json:"versionPrefix,omitempty"` // Prefix to strip from versions (e.g., "maven-")
 	DownloadURL    string                   `json:"downloadUrl"`
 	DownloadType   string                   `json:"downloadType,omitempty"`   // "zip" (default), "file" for single file downloads
 	ExtractPattern string                   `json:"extractPattern,omitempty"` // Folder name inside archive
@@ -39,11 +39,11 @@ type Source struct {
 	VersionFiles   []string                 `json:"versionFiles"`
 	EnvVars        map[string]string        `json:"envVars"`
 	PathDirs       []string                 `json:"pathDirs"`
-	PostInstall    []string                 `json:"postInstall,omitempty"`    // Commands to run after install
-	Dependencies   []string                 `json:"dependencies,omitempty"`   // Other tools this depends on (e.g., ["java"])
-	Distributions  map[string]*Distribution `json:"distributions,omitempty"`  // Vendor distributions (for Java: tem, amzn, zulu)
+	PostInstall    []string                 `json:"postInstall,omitempty"`         // Commands to run after install
+	Dependencies   []string                 `json:"dependencies,omitempty"`        // Other tools this depends on (e.g., ["java"])
+	Distributions  map[string]*Distribution `json:"distributions,omitempty"`       // Vendor distributions (for Java: tem, amzn, zulu)
 	DefaultDist    string                   `json:"defaultDistribution,omitempty"` // Default distribution key
-	StaticVersions []string                 `json:"staticVersions,omitempty"` // Additional versions not in API (e.g., legacy versions)
+	StaticVersions []string                 `json:"staticVersions,omitempty"`      // Additional versions not in API (e.g., legacy versions)
 }
 
 var loadedSources map[string]*Source
@@ -329,7 +329,7 @@ func (s *Source) FetchVersions() ([]string, error) {
 			}
 			return nil, err
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {

@@ -48,7 +48,7 @@ func TestDetectNodeVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			os.WriteFile(filepath.Join(tmpDir, tt.filename), []byte(tt.content), 0644)
+			_ = os.WriteFile(filepath.Join(tmpDir, tt.filename), []byte(tt.content), 0644)
 
 			result := DetectForLanguage(tmpDir, "node")
 
@@ -67,7 +67,7 @@ func TestDetectScalaVersion(t *testing.T) {
 	// Test Scala 2.x detection (goes to "scala")
 	t.Run("scala2", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		os.WriteFile(filepath.Join(tmpDir, ".scala-version"), []byte("2.13.12"), 0644)
+		_ = os.WriteFile(filepath.Join(tmpDir, ".scala-version"), []byte("2.13.12"), 0644)
 
 		result := DetectForLanguage(tmpDir, "scala")
 
@@ -83,7 +83,7 @@ func TestDetectScalaVersion(t *testing.T) {
 	// Test Scala 3.x detection (goes to "scala3")
 	t.Run("scala3", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		os.WriteFile(filepath.Join(tmpDir, ".scala-version"), []byte("3.3.1"), 0644)
+		_ = os.WriteFile(filepath.Join(tmpDir, ".scala-version"), []byte("3.3.1"), 0644)
 
 		result := DetectForLanguage(tmpDir, "scala3")
 
@@ -109,7 +109,7 @@ require (
 	github.com/some/package v1.0.0
 )
 `
-	os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(goMod), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(goMod), 0644)
 
 	result := DetectForLanguage(tmpDir, "go")
 
@@ -134,9 +134,9 @@ func TestDetectAll(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create multiple version files for supported languages
-	os.WriteFile(filepath.Join(tmpDir, ".java-version"), []byte("21"), 0644)
-	os.WriteFile(filepath.Join(tmpDir, ".nvmrc"), []byte("20"), 0644)
-	os.WriteFile(filepath.Join(tmpDir, ".scala-version"), []byte("2.13.12"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, ".java-version"), []byte("21"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, ".nvmrc"), []byte("20"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, ".scala-version"), []byte("2.13.12"), 0644)
 
 	results, err := DetectAll(tmpDir)
 	if err != nil {
@@ -204,7 +204,7 @@ func TestDetectSdkmanrc(t *testing.T) {
 	sdkmanrc := `java=17.0.9-tem
 scala=3.3.1
 `
-	os.WriteFile(filepath.Join(tmpDir, ".sdkmanrc"), []byte(sdkmanrc), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, ".sdkmanrc"), []byte(sdkmanrc), 0644)
 
 	result := DetectForLanguage(tmpDir, "java")
 

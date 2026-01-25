@@ -77,7 +77,7 @@ func setUserEnvVar(name, value string) error {
 	}
 
 	// Also set in current process so it's immediately available
-	os.Setenv(name, value)
+	_ = os.Setenv(name, value)
 
 	// For containers: also create a PowerShell profile entry as backup
 	createPowerShellProfileEntry(name, value)
@@ -91,7 +91,7 @@ func setEnvViaRegistry(name, value string) error {
 	if err != nil {
 		return err
 	}
-	defer key.Close()
+	defer func() { _ = key.Close() }()
 
 	if err := key.SetStringValue(name, value); err != nil {
 		return err
@@ -157,7 +157,7 @@ func createPowerShellProfileEntry(name, value string) {
 			continue
 		}
 		_, _ = f.WriteString(entry)
-		f.Close()
+		_ = f.Close()
 	}
 }
 
@@ -175,7 +175,7 @@ func contains(s, substr string) bool {
 func broadcastSettingChange() {
 	defer func() {
 		// Recover from any panic (e.g., if user32.dll is not available)
-		recover()
+		_ = recover()
 	}()
 
 	user32 := syscall.NewLazyDLL("user32.dll")
@@ -206,7 +206,7 @@ func getUserEnvVar(name string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to open registry key: %w", err)
 	}
-	defer key.Close()
+	defer func() { _ = key.Close() }()
 
 	value, _, err := key.GetStringValue(name)
 	if err != nil {

@@ -94,7 +94,7 @@ func installPowerShellProfile(script string) {
 		fmt.Fprintf(os.Stderr, "Error opening profile: %v\n", err)
 		os.Exit(1)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	if len(existing) > 0 {
 		_, _ = f.WriteString("\n\n")
