@@ -12,5 +12,6 @@
   "envVars": {
     "GOROOT": "."
   },
-  "pathDirs": ["bin"]
+  "pathDirs": ["bin"],
+  "staticVersions": []
 }

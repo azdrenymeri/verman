@@ -12,5 +12,6 @@
     "GRADLE_HOME": "."
   },
   "pathDirs": ["bin"],
-  "dependencies": ["java"]
+  "dependencies": ["java"],
+  "staticVersions": []
 }

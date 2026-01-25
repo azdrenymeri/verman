@@ -43,6 +43,7 @@ type Source struct {
 	Dependencies   []string                 `json:"dependencies,omitempty"`   // Other tools this depends on (e.g., ["java"])
 	Distributions  map[string]*Distribution `json:"distributions,omitempty"`  // Vendor distributions (for Java: tem, amzn, zulu)
 	DefaultDist    string                   `json:"defaultDistribution,omitempty"` // Default distribution key
+	StaticVersions []string                 `json:"staticVersions,omitempty"` // Additional versions not in API (e.g., legacy versions)
 }
 
 var loadedSources map[string]*Source
@@ -311,18 +312,54 @@ func looksLikePartialVersion(v string) bool {
 
 // FetchVersions fetches available versions from the releases URL
 func (s *Source) FetchVersions() ([]string, error) {
-	resp, err := httpClient.Get(s.ReleasesURL)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+	var versions []string
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
+	// Start with static versions if available
+	if len(s.StaticVersions) > 0 {
+		versions = append(versions, s.StaticVersions...)
 	}
 
-	return s.parseVersions(body)
+	// Fetch from API if URL is configured
+	if s.ReleasesURL != "" {
+		resp, err := httpClient.Get(s.ReleasesURL)
+		if err != nil {
+			// If we have static versions, return those even if API fails
+			if len(versions) > 0 {
+				return versions, nil
+			}
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			if len(versions) > 0 {
+				return versions, nil
+			}
+			return nil, err
+		}
+
+		apiVersions, err := s.parseVersions(body)
+		if err != nil {
+			if len(versions) > 0 {
+				return versions, nil
+			}
+			return nil, err
+		}
+		versions = append(versions, apiVersions...)
+	}
+
+	// Remove duplicates
+	seen := make(map[string]bool)
+	unique := make([]string, 0, len(versions))
+	for _, v := range versions {
+		if !seen[v] {
+			seen[v] = true
+			unique = append(unique, v)
+		}
+	}
+
+	return unique, nil
 }
 
 func (s *Source) parseVersions(data []byte) ([]string, error) {

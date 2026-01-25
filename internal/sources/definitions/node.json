@@ -9,5 +9,6 @@
   "versionRegex": "^v?\\d+(\\.\\d+){0,2}$",
   "versionFiles": [".nvmrc", ".node-version"],
   "envVars": {},
-  "pathDirs": ["."]
+  "pathDirs": ["."],
+  "staticVersions": []
 }

@@ -13,5 +13,6 @@
   },
   "pathDirs": ["."],
   "postInstall": ["rename mill-dist-{version}-mill.bat mill.bat"],
-  "dependencies": ["java"]
+  "dependencies": ["java"],
+  "staticVersions": []
 }

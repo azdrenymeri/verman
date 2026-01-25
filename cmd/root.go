@@ -12,6 +12,13 @@ import (
 )
 
 var cfg *config.Config
+var appVersion = "dev"
+
+// SetVersion sets the version string (called from main)
+func SetVersion(v string) {
+	appVersion = v
+	rootCmd.Version = v
+}
 
 var rootCmd = &cobra.Command{
 	Use:   "verman",

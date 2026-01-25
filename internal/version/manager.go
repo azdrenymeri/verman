@@ -361,14 +361,13 @@ func (m *Manager) InstallWithDist(langName, version, dist string) error {
 			return fmt.Errorf("failed to create file: %w", err)
 		}
 
-		if _, err := io.Copy(outFile, resp.Body); err != nil {
+		// Download with progress
+		if err := DownloadWithProgress(outFile, resp.Body, resp.ContentLength, displayVer); err != nil {
 			outFile.Close()
 			os.RemoveAll(versionPath)
 			return fmt.Errorf("download failed: %w", err)
 		}
 		outFile.Close()
-
-		fmt.Printf("Downloaded to %s\n", versionPath)
 	} else {
 		// Zip archive download
 		tmpFile, err := os.CreateTemp("", "verman-*.zip")
@@ -392,7 +391,8 @@ func (m *Manager) InstallWithDist(langName, version, dist string) error {
 			return fmt.Errorf("download failed: HTTP %d", resp.StatusCode)
 		}
 
-		if _, err := io.Copy(tmpFile, resp.Body); err != nil {
+		// Download with progress
+		if err := DownloadWithProgress(tmpFile, resp.Body, resp.ContentLength, displayVer); err != nil {
 			os.RemoveAll(versionPath)
 			return fmt.Errorf("download failed: %w", err)
 		}

@@ -1,0 +1,30 @@
+{
+    "version": "0.1.0",
+    "description": "A universal version manager for Windows - manage Java, Scala, Kotlin, Maven, Gradle, and more",
+    "homepage": "https://github.com/azdren/verman",
+    "license": "MIT",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/azdren/verman/releases/download/v0.1.0/verman.exe",
+            "hash": ""
+        }
+    },
+    "bin": "verman.exe",
+    "checkver": "github",
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/azdren/verman/releases/download/v$version/verman.exe"
+            }
+        }
+    },
+    "notes": [
+        "To set up shell integration, run:",
+        "  verman init --install",
+        "",
+        "Quick start:",
+        "  verman install java 21      # Install Java 21",
+        "  verman install maven 3      # Install Maven",
+        "  verman list java --all      # List available Java versions"
+    ]
+}
