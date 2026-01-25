@@ -137,7 +137,7 @@ func createPowerShellProfileEntry(name, value string) {
 	for _, profilePath := range profiles {
 		// Create directory if needed
 		dir := filepath.Dir(profilePath)
-		os.MkdirAll(dir, 0755)
+		_ = os.MkdirAll(dir, 0755)
 
 		// Read existing profile
 		content, _ := os.ReadFile(profilePath)
@@ -156,7 +156,7 @@ func createPowerShellProfileEntry(name, value string) {
 		if err != nil {
 			continue
 		}
-		f.WriteString(entry)
+		_, _ = f.WriteString(entry)
 		f.Close()
 	}
 }
@@ -189,7 +189,7 @@ func broadcastSettingChange() {
 	}
 
 	envPtr, _ := syscall.UTF16PtrFromString("Environment")
-	sendMessageTimeout.Call(
+	_, _, _ = sendMessageTimeout.Call(
 		uintptr(0xFFFF), // HWND_BROADCAST
 		uintptr(0x001A), // WM_SETTINGCHANGE
 		uintptr(0),

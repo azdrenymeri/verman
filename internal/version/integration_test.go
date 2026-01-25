@@ -28,8 +28,8 @@ func TestIntegration_FullWorkflow(t *testing.T) {
 	projectsDir := filepath.Join(homeDir, "projects")
 
 	// Create directory structure
-	os.MkdirAll(filepath.Join(versionsDir, "java"), 0755)
-	os.MkdirAll(projectsDir, 0755)
+	_ = os.MkdirAll(filepath.Join(versionsDir, "java"), 0755)
+	_ = os.MkdirAll(projectsDir, 0755)
 
 	// Create config
 	cfg := &config.Config{
@@ -43,13 +43,13 @@ func TestIntegration_FullWorkflow(t *testing.T) {
 
 	// Step 1: "Install" Java 17 (mock)
 	java17Dir := filepath.Join(versionsDir, "java", "17")
-	os.MkdirAll(filepath.Join(java17Dir, "bin"), 0755)
-	os.WriteFile(filepath.Join(java17Dir, "bin", "java.exe"), []byte("mock java 17"), 0755)
+	_ = os.MkdirAll(filepath.Join(java17Dir, "bin"), 0755)
+	_ = os.WriteFile(filepath.Join(java17Dir, "bin", "java.exe"), []byte("mock java 17"), 0755)
 
 	// Step 2: "Install" Java 21 (mock)
 	java21Dir := filepath.Join(versionsDir, "java", "21")
-	os.MkdirAll(filepath.Join(java21Dir, "bin"), 0755)
-	os.WriteFile(filepath.Join(java21Dir, "bin", "java.exe"), []byte("mock java 21"), 0755)
+	_ = os.MkdirAll(filepath.Join(java21Dir, "bin"), 0755)
+	_ = os.WriteFile(filepath.Join(java21Dir, "bin", "java.exe"), []byte("mock java 21"), 0755)
 
 	// Verify both are listed
 	versions, err := mgr.ListInstalled("java")
@@ -72,8 +72,8 @@ func TestIntegration_FullWorkflow(t *testing.T) {
 
 	// Step 4: Create a project that requires Java 21
 	projectDir := filepath.Join(projectsDir, "my-spring-app")
-	os.MkdirAll(projectDir, 0755)
-	os.WriteFile(filepath.Join(projectDir, ".java-version"), []byte("21"), 0644)
+	_ = os.MkdirAll(projectDir, 0755)
+	_ = os.WriteFile(filepath.Join(projectDir, ".java-version"), []byte("21"), 0644)
 
 	// Step 5: Detect version in project
 	detected := DetectForLanguage(projectDir, "java")
@@ -124,7 +124,7 @@ func TestIntegration_MultiLanguageProject(t *testing.T) {
 
 	// Create versions directories for supported languages
 	for _, lang := range []string{"java", "node", "scala"} {
-		os.MkdirAll(filepath.Join(versionsDir, lang), 0755)
+		_ = os.MkdirAll(filepath.Join(versionsDir, lang), 0755)
 	}
 
 	cfg := &config.Config{
@@ -139,16 +139,16 @@ func TestIntegration_MultiLanguageProject(t *testing.T) {
 	mgr := NewManager(cfg)
 
 	// Install mock versions
-	os.MkdirAll(filepath.Join(versionsDir, "java", "21", "bin"), 0755)
-	os.MkdirAll(filepath.Join(versionsDir, "node", "20"), 0755)
-	os.MkdirAll(filepath.Join(versionsDir, "scala", "2.13.12", "bin"), 0755)
+	_ = os.MkdirAll(filepath.Join(versionsDir, "java", "21", "bin"), 0755)
+	_ = os.MkdirAll(filepath.Join(versionsDir, "node", "20"), 0755)
+	_ = os.MkdirAll(filepath.Join(versionsDir, "scala", "2.13.12", "bin"), 0755)
 
 	// Create project with multiple version files
 	projectDir := filepath.Join(homeDir, "fullstack-app")
-	os.MkdirAll(projectDir, 0755)
-	os.WriteFile(filepath.Join(projectDir, ".java-version"), []byte("21"), 0644)
-	os.WriteFile(filepath.Join(projectDir, ".nvmrc"), []byte("20"), 0644)
-	os.WriteFile(filepath.Join(projectDir, ".scala-version"), []byte("2.13.12"), 0644)
+	_ = os.MkdirAll(projectDir, 0755)
+	_ = os.WriteFile(filepath.Join(projectDir, ".java-version"), []byte("21"), 0644)
+	_ = os.WriteFile(filepath.Join(projectDir, ".nvmrc"), []byte("20"), 0644)
+	_ = os.WriteFile(filepath.Join(projectDir, ".scala-version"), []byte("2.13.12"), 0644)
 
 	// Detect all versions
 	detected, err := DetectAll(projectDir)
@@ -195,12 +195,12 @@ func TestIntegration_NestedProjects(t *testing.T) {
 	projectBDir := filepath.Join(workspaceDir, "project-b")
 	projectBSrcDir := filepath.Join(projectBDir, "src", "main", "java")
 
-	os.MkdirAll(projectASrcDir, 0755)
-	os.MkdirAll(projectBSrcDir, 0755)
+	_ = os.MkdirAll(projectASrcDir, 0755)
+	_ = os.MkdirAll(projectBSrcDir, 0755)
 
 	// Write version files
-	os.WriteFile(filepath.Join(workspaceDir, ".java-version"), []byte("17"), 0644)
-	os.WriteFile(filepath.Join(projectADir, ".java-version"), []byte("21"), 0644)
+	_ = os.WriteFile(filepath.Join(workspaceDir, ".java-version"), []byte("17"), 0644)
+	_ = os.WriteFile(filepath.Join(projectADir, ".java-version"), []byte("21"), 0644)
 
 	// Test detection from project-a deep directory
 	resultA := DetectForLanguage(projectASrcDir, "java")

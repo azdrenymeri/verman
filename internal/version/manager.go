@@ -186,11 +186,11 @@ func removeJunction(path string) {
 			err := exec.Command("cmd", "/c", "rmdir", path).Run()
 			if err != nil {
 				// Fallback: Use PowerShell Remove-Item
-				exec.Command("pwsh", "-NoProfile", "-Command",
+				_ = exec.Command("pwsh", "-NoProfile", "-Command",
 					fmt.Sprintf("Remove-Item -Path '%s' -Force", path)).Run()
 			}
 		} else {
-			os.Remove(path)
+			_ = os.Remove(path)
 		}
 	}
 }
@@ -218,19 +218,17 @@ func createJunction(linkPath, targetPath string) error {
 
 		// Try cmd first (full Windows), fall back to PowerShell (Nano Server)
 		cmd := exec.Command("cmd", "/c", "mklink", "/J", absLink, absTarget)
-		output, err := cmd.CombinedOutput()
-		if err == nil {
+		if err := cmd.Run(); err == nil {
 			return nil
 		}
 
 		// Fallback: Use PowerShell New-Item for Nano Server
 		psCmd := fmt.Sprintf("New-Item -ItemType Junction -Path '%s' -Target '%s'", absLink, absTarget)
 		cmd = exec.Command("pwsh", "-NoProfile", "-Command", psCmd)
-		output, err = cmd.CombinedOutput()
-		if err != nil {
+		if err := cmd.Run(); err != nil {
 			// Try powershell.exe as last resort
 			cmd = exec.Command("powershell", "-NoProfile", "-Command", psCmd)
-			output, err = cmd.CombinedOutput()
+			output, err := cmd.CombinedOutput()
 			if err != nil {
 				return fmt.Errorf("failed to create junction: %w (output: %s)", err, string(output))
 			}
@@ -441,7 +439,7 @@ func (m *Manager) offerJavaHomeSetup(javaPath string) {
 
 	fmt.Printf("\nSet JAVA_HOME globally? [Y/n] ")
 	var response string
-	fmt.Scanln(&response)
+	_, _ = fmt.Scanln(&response)
 	if response == "" || response == "y" || response == "Y" {
 		absPath, err := filepath.Abs(javaPath)
 		if err != nil {

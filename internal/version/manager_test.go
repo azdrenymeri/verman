@@ -19,7 +19,7 @@ func setupTestManager(t *testing.T) (*Manager, string) {
 
 	// Create directories for all languages
 	for _, lang := range []string{"java", "node", "scala", "python", "ruby", "go", "rust", "dotnet"} {
-		os.MkdirAll(filepath.Join(versionsDir, lang), 0755)
+		_ = os.MkdirAll(filepath.Join(versionsDir, lang), 0755)
 	}
 
 	cfg := &config.Config{
@@ -250,9 +250,9 @@ func TestMultipleLanguages(t *testing.T) {
 	createMockVersion(t, mgr, "scala", "2.13.12")
 
 	// Use each
-	mgr.Use("java", "21", false)
-	mgr.Use("node", "20", false)
-	mgr.Use("scala", "2.13.12", false)
+	_ = mgr.Use("java", "21", false)
+	_ = mgr.Use("node", "20", false)
+	_ = mgr.Use("scala", "2.13.12", false)
 
 	// Verify each has correct current
 	tests := []struct {

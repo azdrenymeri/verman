@@ -11,11 +11,11 @@ import (
 func TestDetectJavaVersion(t *testing.T) {
 	tmpDir := t.TempDir()
 	projectDir := filepath.Join(tmpDir, "my-java-project")
-	os.MkdirAll(projectDir, 0755)
+	_ = os.MkdirAll(projectDir, 0755)
 
 	// Create .java-version file
 	versionFile := filepath.Join(projectDir, ".java-version")
-	os.WriteFile(versionFile, []byte("21"), 0644)
+	_ = os.WriteFile(versionFile, []byte("21"), 0644)
 
 	// Detect
 	result := DetectForLanguage(projectDir, "java")
@@ -169,11 +169,11 @@ func TestDetectWalksUpDirectoryTree(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create version file in parent directory
-	os.WriteFile(filepath.Join(tmpDir, ".java-version"), []byte("17"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, ".java-version"), []byte("17"), 0644)
 
 	// Create nested project directory
 	nestedDir := filepath.Join(tmpDir, "src", "main", "java")
-	os.MkdirAll(nestedDir, 0755)
+	_ = os.MkdirAll(nestedDir, 0755)
 
 	// Detect from nested directory - should find parent's version file
 	result := DetectForLanguage(nestedDir, "java")

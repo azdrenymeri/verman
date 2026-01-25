@@ -79,7 +79,7 @@ Examples:
 		// Ask if user wants to use this version now
 		fmt.Printf("\nSwitch to %s %s now? [Y/n] ", langName, installVer)
 		var response string
-		fmt.Scanln(&response)
+		_, _ = fmt.Scanln(&response)
 		if response == "" || response == "y" || response == "Y" {
 			if err := mgr.Use(langName, installVer, false); err != nil {
 				fmt.Fprintf(os.Stderr, "Error switching version: %v\n", err)

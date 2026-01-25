@@ -8,8 +8,8 @@ import (
 
 func init() {
 	// Load sources for testing
-	sources.Load("")
-	LoadFromSources()
+	_ = sources.Load("")
+	_ = LoadFromSources()
 }
 
 func TestAllLanguagesRegistered(t *testing.T) {

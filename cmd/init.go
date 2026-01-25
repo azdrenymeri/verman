@@ -97,9 +97,9 @@ func installPowerShellProfile(script string) {
 	defer f.Close()
 
 	if len(existing) > 0 {
-		f.WriteString("\n\n")
+		_, _ = f.WriteString("\n\n")
 	}
-	f.WriteString(script)
+	_, _ = f.WriteString(script)
 
 	fmt.Printf("Installed to: %s\n", profilePath)
 	fmt.Println("Restart PowerShell for changes to take effect")

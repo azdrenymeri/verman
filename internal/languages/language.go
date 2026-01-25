@@ -14,8 +14,8 @@ func init() {
 	// Auto-load embedded sources when package is imported
 	// This ensures tests and simple usage work without explicit initialization
 	// CLI commands can call sources.Load() again with user sources dir to override
-	sources.Load("")
-	LoadFromSources()
+	_ = sources.Load("")
+	_ = LoadFromSources()
 }
 
 // Language defines the interface for a managed language/runtime

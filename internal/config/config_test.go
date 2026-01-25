@@ -82,7 +82,7 @@ func TestSetCurrentVersion(t *testing.T) {
 	// Reload from file and verify persistence
 	data, _ := os.ReadFile(configPath)
 	var reloaded Config
-	json.Unmarshal(data, &reloaded)
+	_ = json.Unmarshal(data, &reloaded)
 
 	if reloaded.Languages["java"].CurrentVersion != "21" {
 		t.Errorf("Persisted java version should be 21, got %s", reloaded.Languages["java"].CurrentVersion)

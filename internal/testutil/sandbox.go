@@ -86,7 +86,7 @@ func (sb *Sandbox) CreateMockVersion(lang, version string) string {
 		exeName = "ruby.exe"
 	case "rust":
 		binDir = filepath.Join(versionDir, "cargo", "bin")
-		os.MkdirAll(binDir, 0755)
+		_ = os.MkdirAll(binDir, 0755)
 		exeName = "rustc.exe"
 	case "dotnet":
 		exeName = filepath.Join("..", "dotnet.exe")
@@ -94,7 +94,7 @@ func (sb *Sandbox) CreateMockVersion(lang, version string) string {
 
 	if exeName != "" {
 		exePath := filepath.Join(binDir, exeName)
-		os.MkdirAll(filepath.Dir(exePath), 0755)
+		_ = os.MkdirAll(filepath.Dir(exePath), 0755)
 		// Create empty file as mock executable
 		if err := os.WriteFile(exePath, []byte("mock"), 0755); err != nil {
 			sb.T.Fatalf("Failed to create mock executable: %v", err)
