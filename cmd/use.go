@@ -25,6 +25,11 @@ Examples:
 		global, _ := cmd.Flags().GetBool("global")
 		quiet, _ := cmd.Flags().GetBool("quiet")
 
+		// Smart routing: "scala 3.x" -> "scala3"
+		if langName == "scala" && len(ver) > 0 && ver[0] == '3' {
+			langName = "scala3"
+		}
+
 		if _, ok := languages.Get(langName); !ok {
 			fmt.Fprintf(os.Stderr, "Unknown language: %s\n", langName)
 			fmt.Fprintf(os.Stderr, "Available: %v\n", languages.Names())

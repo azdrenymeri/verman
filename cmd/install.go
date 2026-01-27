@@ -36,6 +36,11 @@ Examples:
 		langName := args[0]
 		ver := args[1]
 
+		// Smart routing: "scala 3.x" -> "scala3"
+		if langName == "scala" && len(ver) > 0 && ver[0] == '3' {
+			langName = "scala3"
+		}
+
 		lang, ok := languages.Get(langName)
 		if !ok {
 			fmt.Fprintf(os.Stderr, "Unknown language: %s\n", langName)
@@ -97,6 +102,11 @@ var uninstallCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		langName := args[0]
 		ver := args[1]
+
+		// Smart routing: "scala 3.x" -> "scala3"
+		if langName == "scala" && len(ver) > 0 && ver[0] == '3' {
+			langName = "scala3"
+		}
 
 		mgr := version.NewManager(cfg)
 		if err := mgr.Uninstall(langName, ver); err != nil {

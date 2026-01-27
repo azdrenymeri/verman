@@ -46,6 +46,12 @@ Examples:
 }
 
 func listLanguage(mgr *version.Manager, langName string) {
+	// Special handling for scala: show both scala (2.x) and scala3 versions
+	if langName == "scala" {
+		listScalaVersions(mgr)
+		return
+	}
+
 	if _, ok := languages.Get(langName); !ok {
 		fmt.Fprintf(os.Stderr, "Unknown language: %s\n", langName)
 		os.Exit(1)
@@ -72,6 +78,124 @@ func listLanguage(mgr *version.Manager, langName string) {
 		}
 		fmt.Printf("  %s%s\n", marker, v)
 	}
+}
+
+func listScalaVersions(mgr *version.Manager) {
+	// List both scala (2.x) and scala3 versions together
+	scala2Versions, _ := mgr.ListInstalled("scala")
+	scala3Versions, _ := mgr.ListInstalled("scala3")
+
+	scala2Current, _ := mgr.GetCurrent("scala")
+	scala3Current, _ := mgr.GetCurrent("scala3")
+
+	if len(scala2Versions) == 0 && len(scala3Versions) == 0 {
+		fmt.Println("No Scala versions installed")
+		return
+	}
+
+	fmt.Println("scala:")
+	for _, v := range scala3Versions {
+		marker := "  "
+		if v == scala3Current {
+			marker = "* "
+		}
+		fmt.Printf("  %s%s\n", marker, v)
+	}
+	for _, v := range scala2Versions {
+		marker := "  "
+		if v == scala2Current {
+			marker = "* "
+		}
+		fmt.Printf("  %s%s\n", marker, v)
+	}
+}
+
+func listRemoteScalaVersions(mgr *version.Manager) {
+	// Fetch both Scala 2 and Scala 3 versions
+	scala2Src, _ := sources.Get("scala")
+	scala3Src, _ := sources.Get("scala3")
+
+	fmt.Println("Fetching available Scala versions...")
+	fmt.Println()
+
+	var allVersions []string
+
+	// Fetch Scala 3 versions
+	if scala3Src != nil {
+		if versions, err := scala3Src.FetchVersions(); err == nil {
+			allVersions = append(allVersions, versions...)
+		}
+	}
+
+	// Fetch Scala 2 versions
+	if scala2Src != nil {
+		if versions, err := scala2Src.FetchVersions(); err == nil {
+			allVersions = append(allVersions, versions...)
+		}
+	}
+
+	if len(allVersions) == 0 {
+		fmt.Println("No versions found")
+		return
+	}
+
+	// Get installed versions (both scala and scala3)
+	installedMap := make(map[string]bool)
+	if installed, _ := mgr.ListInstalled("scala"); len(installed) > 0 {
+		for _, v := range installed {
+			installedMap[v] = true
+		}
+	}
+	if installed, _ := mgr.ListInstalled("scala3"); len(installed) > 0 {
+		for _, v := range installed {
+			installedMap[v] = true
+		}
+	}
+
+	scala2Current, _ := mgr.GetCurrent("scala")
+	scala3Current, _ := mgr.GetCurrent("scala3")
+
+	// Sort versions (newest first)
+	sort.Slice(allVersions, func(i, j int) bool {
+		return compareVersions(allVersions[i], allVersions[j]) > 0
+	})
+
+	const width = 80
+
+	// Header
+	fmt.Println(strings.Repeat("=", width))
+	fmt.Println("Available Scala Versions")
+	fmt.Println(strings.Repeat("=", width))
+
+	// Print in columns
+	const cols = 5
+	const colWidth = 15
+
+	for i, v := range allVersions {
+		marker := "    "
+		if v == scala2Current || v == scala3Current {
+			marker = "> * "
+		} else if installedMap[v] {
+			marker = "  * "
+		}
+
+		fmt.Printf("%s%-*s", marker, colWidth-4, v)
+		if (i+1)%cols == 0 {
+			fmt.Println()
+		}
+	}
+	if len(allVersions)%cols != 0 {
+		fmt.Println()
+	}
+
+	// Footer
+	fmt.Println(strings.Repeat("=", width))
+	fmt.Println("* - installed")
+	fmt.Println("> - currently in use")
+	fmt.Println(strings.Repeat("=", width))
+	fmt.Println()
+	fmt.Println("Use: verman install scala <version>")
+	fmt.Println("     (Automatically selects Scala 2 or 3 based on version)")
 }
 
 func listAllInstalled(mgr *version.Manager) {
@@ -104,6 +228,12 @@ func listAllInstalled(mgr *version.Manager) {
 }
 
 func listRemoteVersions(mgr *version.Manager, langName string) {
+	// Special handling for scala: show both scala2 and scala3 remote versions
+	if langName == "scala" {
+		listRemoteScalaVersions(mgr)
+		return
+	}
+
 	src, ok := sources.Get(langName)
 	if !ok {
 		fmt.Fprintf(os.Stderr, "Unknown language: %s\n", langName)
